@@ -29,6 +29,7 @@ class SlackBot
   def naive_respond(params, options = {})
     return nil if params[:user_name] == "slackbot" || params[:user_id] == "USLACKBOT"
 
+    options[:link_names] = 1
     user_name = params[:user_name] ? "@#{params[:user_name]}" : ""
     return {text: "#{user_name} Hi!"}.merge(options).to_json
   end

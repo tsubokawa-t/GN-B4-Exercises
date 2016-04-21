@@ -1,0 +1,262 @@
+\documentclass[fleqn, 14pt]{sty/extarticlej}
+\oddsidemargin=-1cm
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{indentfirst}
+\textwidth=18cm
+\textheight=23cm
+\topmargin=0cm
+\headheight=1cm
+\headsep=0cm
+\footskip=1cm
+
+\def\labelenumi{(\theenumi)}
+\def\theenumii{\Alph{enumii}}
+\def\theenumiii{(\alph{enumiii})}
+\def\：{\makebox[1zw][l]{：}}
+\usepackage{comment}
+\usepackage{url}
+\urlstyle{same}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% sty/ にある研究室独自のスタイルファイル
+\usepackage{jtygm}  % フォントに関する余計な警告を消す
+\usepackage{nutils} % insertfigure, figef, tabref マクロ
+
+\def\figdir{./figs} % 図のディレクトリ
+\def\figext{pdf}    % 図のファイルの拡張子
+
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 表題
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{center}
+{\Large {\bf SlackBotプログラムの仕様書}}
+
+\end{center}
+\begin{flushright}
+2016年04月21日\\
+
+乃村研究室 坪川 友輝
+\end{flushright}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 概要
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{概要}
+本資料は，平成28年度GNグループB4新人研修課題のSlackBotプログラムの仕様に
+ついてまとめたものである．本プログラムは以下の3つの機能をもつ．
+\begin{enumerate}
+\item ``「○○」と言って''という文字列を含む発言に反応して``○○''と発言する機能
+\item ``weather''という発言に反応して，岡山市の天気情報を発言する機能
+\item GitHubへpushを行ったとき，pushしたことを発言する機能
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 対象とする利用者
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{対象とする利用者}
+本プログラムは以下の2つのアカウントを所有する利用者を対象としている．
+\begin{enumerate}
+ \item Slack アカウント
+ \item GitHub アカウント
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 機能
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{機能}
+\label{機能}
+本プログラムがもつ3つの機能を以下に述べる．
+本プログラムはSlackに対するユーザの発言を受信し，受信した内容に対応する内容を
+Slackへ発言する．ただし，受信する発言は``@T-Bot''で始まる発言のみである．
+\begin{description}
+\item[(機能1)] ``「○○」と言って''という文字列を含む発言に反応して``○○''と発言する機能\\
+  この機能は，受信した発言の中に``「○○」と言って''という文字列が含まれる場合，
+  ``○○''と発言する機能である．
+   
+\item[(機能2)] ``weather''という発言に反応して，岡山市の天気情報を発言する機能\\
+  この機能は，受信した発言の``@T-Bot''に続く文字列が``weather''である場合，
+  岡山市の天気情報を発言する機能である．
+  なお，天気情報はWebサイト\cite{weather}から取得する．
+  発言する内容は天気概況文，3日間の天気予報，および予想気温である．
+  なお，予想気温は取得した情報に含まれている場合のみ発言する．
+  
+\item[(機能3)] GitHubへpushを行ったとき，pushしたことを発言する機能\\
+  この機能は，Webhooksを設定したリポジトリへpushを行った時，
+  pushを行ったユーザ，および最新のcommitの内容を発言する機能である．
+  
+\end{description}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 動作環境
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{動作環境}
+\label{動作環境}
+本プログラムの動作環境を表\ref{tab:table1}に示す．
+また，表\ref{tab:table1}の環境において本プログラムが正常に動作することを確認した．
+\begin{table}[tb]
+  \begin{center}
+    \caption{動作環境}
+    \label{tab:table1}
+    \vspace{0.3cm}
+    \scalebox{1.0}{
+      \begin{tabular}{l|l}
+        \hline
+        \hline 
+        項目& 内容\\
+	\hline 
+        ソフトウェア& Ruby(2.1.5),bundler(1.11.2),GitHub(2.1.4),Heroku(3.42.47)\\
+
+        OS& Linux Debian GNU/Linux(version 8.1)\\
+   
+        CPU& Intel(R) Core(TM) i5-4590 CPU (3.30GHz)\\
+   
+        メモリ& 1.00GB\\  
+        
+        ブラウザ& FireFox バージョン 45.0.2\\
+        \hline
+      \end{tabular}
+    }
+  \end{center}
+\end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 環境構築
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{環境構築}
+\label{環境構築}
+\subsection{概要}
+本プログラムを実行するために必要な環境構築の手順を以下に示す．
+\begin{enumerate}
+ \item SlackのWebHooksの設定 
+ \item GitHubのWebHooksの設定
+ \item Heroku上にアプリケーションを生成
+\end{enumerate}
+　次節で具体的な手順を述べる．
+\subsection{具体的な手順}
+\subsubsection{SlackのWebHooksの設定}
+\begin{enumerate}
+ \item 自身のSlackアカウントにログインする．
+
+ \item 以下のURLから「APP Directory」にアクセスし，「Configure」をクリックする．\\
+   \url{https://slack.com/apps}
+
+ \item 「Custom Integrations」から「Incoming WebHooks」をクリックする．
+
+ \item 「Add Configuration」をクリックし，新たなIncoming WebHooksを追加する.
+
+ \item Botが発言するチャンネルを選択した後，「Add Incoming WebHooks integration」を
+   クリックし，Webhook URLを取得する．
+
+ \item 再び「Custome Integrations」にアクセスし，「Outgoing WebHooks」を
+   クリックする．
+   
+ \item 「Add Configuration」から，「Add Outgoing WebHooks integration」を
+   クリックする．
+
+ \item Outgoing WebHookに関して以下を設定する．
+   \begin{enumerate}
+     \item 発言を監視するchannel
+     \item WebHooksが動作する契機となるTrigger Word（@T-Bot）
+     \item WebHooksが動作した際にPOSTを行うURL\\
+       \url{https://<app_name>.herokuapp.com/git}
+   \end{enumerate}
+\end{enumerate}
+
+\subsubsection{GitHubのWebHooksの設定}
+\begin{enumerate}
+  \item 自身のGitHubアカウントにログインする．
+
+  \item 任意のリポジトリの管理画面にアクセスする．
+
+  \item 「Webhooks \& services」から「Add webhook」をクリックする．
+
+  \item pushされた時にPOSTを行うURLを設定して，「Add webhook」をクリックし
+    新しいWebhooksを作成する．
+\end{enumerate}
+
+\subsubsection{Heroku上にアプリケーションを生成}
+\begin{enumerate}
+\item 以下のURLからHerokuにアクセスし，「Sign up」から新しいアカウントを登録する．\\
+   \url{https://www.heroku.com/}
+
+\item Herokuから送信されたメールに記載されているURLをクリックし，パスワードを設定する．
+
+\item 登録したアカウントでログインし，
+  「Getting Started with Heroku」の使用する言語を選択する．
+
+\item 「I'm ready to start」をクリックし，「Download Heroku Toolbelt for…」
+  からToolbeltをダウンロードする．
+  
+\item 以下のコマンドを実行し，Herokuにログインする．
+\begin{verbatim}
+     $ heroku login
+\end{verbatim}
+
+\item Heroku上にアプリケーションを生成するために以下のコマンドを実行する．
+\begin{verbatim}
+     $ heroku create <app_name>
+\end{verbatim}
+
+\item 以下のコマンドを実行し，Incoming WebHook URLをHerokuの環境変数に追加する．
+  XXXXXXXXにはSlackのWebhooks設定時に取得したものを入力する．
+\begin{verbatim}
+     $ heroku config:set INCOMING_WEBHOOK_URL="https://XXXXXXXX"
+\end{verbatim}
+
+\item 以下のコマンドを実行し，gemをインストールする．
+\begin{verbatim}
+     $ bundle install --path vendor/bundle
+\end{verbatim}
+
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 使用方法
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{使用方法}
+\label{使用方法}
+本プログラムを実行するための手順を以下に示す．
+\begin{enumerate}
+\item コマンドラインに以下のコマンドを入力し，
+  Herokuにアプリケーションをデプロイすることで実行する．
+\begin{verbatim}
+     $ git push heroku master
+\end{verbatim}
+\end{enumerate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% エラー処理と保証しない動作
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{エラー処理と保証しない動作}
+\label{エラー処理と保証しない動作}
+\subsection{エラー処理}
+　本プログラムのエラー処理を以下に示す．
+\begin{enumerate}
+\item 設定したOutgoingWebhooks以外からPOSTされた場合，
+  エラーメッセージを表示して発言を中止する．
+\begin{verbatim}
+ERROR: POST is delivered by wrong whooks.
+\end{verbatim}
+\end{enumerate}
+
+\subsection{保証しない動作}
+　本プログラムの保証しない動作を以下に示す．
+\begin{enumerate}
+\item 受信した発言中に``「○○」と言って''が複数含まれるときのSlackへの発言
+\item GitHubのWebhooksの設定でpush以外のイベントでもPOSTを行うようにした場合
+\item ``@T-Bot''以外の文字列をTrigger WordとしてBotを動作させた場合
+\item 表\ref{tab:table1}に示す動作環境以外でプログラムを実行
+\end{enumerate}
+
+
+
+\begin{thebibliography}{9}
+\bibitem{weather}
+  livedoor Co.,Ltd.: Weather Hacks - livedoor 天気情報,
+  livedoor Co.,Ltd.（オンライン），入手先\\
+＜\url{http://weather.livedoor.com/weather_hacks}＞（参照2016-4-21）.
+\end{thebibliography}
+
+\end{document}

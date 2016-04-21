@@ -1,0 +1,96 @@
+\documentclass[fleqn, 14pt]{sty/extarticlej}
+\oddsidemargin=-1cm
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{indentfirst}
+\textwidth=18cm
+\textheight=23cm
+\topmargin=0cm
+\headheight=1cm
+\headsep=0cm
+\footskip=1cm
+
+\def\labelenumi{(\theenumi)}
+\def\theenumii{\Alph{enumii}}
+\def\theenumiii{(\alph{enumiii})}
+\def\：{\makebox[1zw][l]{：}}
+\usepackage{comment}
+\usepackage{url}
+\urlstyle{same}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% sty/ にある研究室独自のスタイルファイル
+\usepackage{jtygm}  % フォントに関する余計な警告を消す
+\usepackage{nutils} % insertfigure, figef, tabref マクロ
+
+\def\figdir{./figs} % 図のディレクトリ
+\def\figext{pdf}    % 図のファイルの拡張子
+
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 表題
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{center}
+{\Large {\bf 平成28年度GNグループB4新人研修課題 報告書}}
+
+\end{center}
+\begin{flushright}
+2016年04月21日\\
+
+乃村研究室 坪川 友輝
+\end{flushright}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% 概要
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{概要}
+本資料は平成28年度GNグループB4新人研修課題の報告書である．
+本資料では，課題内容，理解できなかった部分，作成できなかった機能，
+および自主的に作成した機能について述べる．
+
+\section{課題内容}
+課題内容は，RubyによるSlackBotプログラムの作成である．
+具体的には以下の2つを行う．
+\begin{enumerate}
+\item 任意の文字列を発言するプログラムの作成
+\item SlackBotプログラムへの機能の追加
+\end{enumerate}
+
+本課題におけるRubyのバージョンは，2.1.5である．
+
+\section{理解できなかった部分}
+\begin{enumerate}
+\item Net::HTTPクラスの仕組み
+\item sinatraサーバへPOSTしたときのパラメータについて\\
+  スクリプトからsinatraにJSONデータをPOSTすると，sinatraはparamsとして
+  データを受け取る．このとき，データに入れ子構造や配列が
+  存在するとそれらはparamsで正しく受け取れていなかった．
+  具体的には以下のようなデータをPOSTした場合．
+\begin{verbatim}
+    {"aaa": {"bbb": "111"}, "ccc": ["222", "333"]}
+\end{verbatim}
+  paramsは以下のようになっていた．
+\begin{verbatim}
+   {"aaa"=>"{\"bbb\"=>\"111\"}", "ccc"=>"333"}
+\end{verbatim}
+  つまり，入れ子構造は文字列として，配列は最後の要素しか渡されていなかった．
+  しかし，GitHubのWebhooksからJSONデータをPOSTする場合は，
+  sinatraはparamsとしてデータを受け取らない．
+  このため，request.bodyからデータを取得する必要がある．
+  また，入れ子構造や配列も正しく取得できた．
+  なぜ，スクリプトからPOSTする場合と，GitHubからPOSTする場合とで，
+  パラメータの渡され方に違いがあるのか理解できなかった．
+\end{enumerate}
+
+\section{作成できなかった機能}
+\begin{enumerate}
+  \item GitHubのWebhooksを用いたpush以外のイベントへの対応
+\end{enumerate}
+
+\section{自主的に作成した機能}
+以下の機能を自主的に作成した．
+\begin{enumerate}
+\item``weather''という発言に反応し，岡山市の天気情報を発言
+\item GitHubへpushを行った時，pushされた内容を発言
+\end{enumerate}
+
+\end{document}
